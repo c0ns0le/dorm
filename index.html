@@ -12,43 +12,67 @@
 	<script type="text/javascript" src='js/main.js'></script>
 </head>
 <body>
-	<form id='inform'action="">
-		房间<select id="room" name="roomId"></select>
-		床号<select id="bed" name="bid"></select>
-		姓名<input id="name" name="name" type="text" />
-		性别:男<input name="sex" checked type="radio" value=1 />女<input name="sex" value=2 type="radio" />
-		<br />
-		部门<input id="dept" name="dept" type="text" />
-		职位<input id="job" name="job" type="text" />
-		搬入日期<input id="date" name="date" type="text" />
-		<input id="in" name="" type="button" value='录入' /><br/>
-	</form>
-	<div>
-		<form id="searchForm" action="">
-		<select id="room2" name="room">
-			<option value="0">所有房间</option>
-		</select>
-		<select id="status" name="status">
-			<option value="3">所有床</option>
-			<option value="1">空床</option>
-			<option value="2">有人的床</option>
-		</select>
-		开始 <input id='from' name='from' type="text" />
-		到 <input id='to' type="text" name='to' />
-		<input id='search' type="button" value='查询' />
+	<div id="menu">
+		<ul>
+			<li> <a id='bed' href="">房间管理</a> </li>
+			<li> <a id='action' href="">搬入搬出记录</a></li>
+		</ul>
+	</div>
+	<div id="bed_content" class='content'>
+		<form id='inform' action="">
+			房间<select class='room' name="roomId"></select>
+			床号<select class="bed" name="bid"></select>
+			姓名<input id="name" name="name" type="text" />
+			性别:男<input name="sex" checked type="radio" value=1 />女<input name="sex" value=2 type="radio" />
+			<br />
+			部门<input id="dept" name="dept" type="text" />
+			职位<input id="job" name="job" type="text" />
+			搬入日期<input id="date" name="date" type="text" />
+			<input id="in" name="" type="button" value='录入' /><br/>
 		</form>
+		<div>
+			<form id="searchForm" action="">
+				<select class="room" name="room">
+					<option value="0">所有房间</option>
+				</select>
+				<select id="status" name="status">
+					<option value="3">所有床</option>
+					<option value="1">空床</option>
+					<option value="2">有人的床</option>
+				</select>
+			日期<input class='from' name="form" type="text" />
+			到<input class='to' name="to" type="text" />
+				<input id='search' type="button" value='查询' />
+			</form>
+		</div>
+		<div id="list"> </div>
+	</div>
+	<div id='action_content' class='content'>
+		<form id='inform' action="">
+			房间<select class="room" name="roomId"></select>
+			姓名<input id="name" name="name" type="text" />
+				<select  name="sex">
+					<option value="0">性别</option>
+					<option value="1">男</option>
+					<option value="2">女</option>
+				</select>
+			<br />
+				<select  name="action">
+					<option value="0">搬入搬出</option>
+					<option value="1">搬入</option>
+					<option value="2">搬出</option>
+				</select>
+		
+			日期<input class='from' name="form" type="text" />
+			到<input class='to' name="to" type="text" />
+			<input id="in" name="" type="button" value='查询' /><br/>
+		</form>
+		<div id="actionlog"> </div>
 	</div>
 	<div>
-		页面大小<select id="size" name="">
-			<option value="15">15</option>
-			<option value="20">20</option>
-			<option value="25">25</option>
-			<option value="30">30</option>
-			<option value="35">35</option>
-		</select>
+		页面大小<select id="size" name=""></select>
 		记录数: <span id='len'></span>
 	</div>
-	<div id="list"> </div>
 	<div>
 		<a id="first" href=''>首页</a>
 		<a id="prev" href=''>上一页</a>

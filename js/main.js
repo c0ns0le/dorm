@@ -1,16 +1,5 @@
 $(function () {
-	var STATUS={EMPTY:1,FULL:2,ALL:3}
-	var p={page:1,status:STATUS.ALL}
-	var bedFilter={};
-	bedFilter[STATUS.EMPTY]=function(v){
-		return v.split(':')[1]==0;
-	}
-	bedFilter[STATUS.FULL]=function(v){
-		return v.split(':')[1]>0;
-	}
-	bedFilter[STATUS.ALL]=function(v){
-		return true;
-	}
+	var show,menu={};
 
 	var save = function (name, json) {
 		localStorage.setItem(name, JSON.stringify(json));
@@ -36,7 +25,7 @@ $(function () {
 			bs[bid] = [uid,inout.date];
 			user[uid]=[inout.name,inout.sex,inout.dept,inout.job];
 			action.push([
-				uid,bid,inout.action,inout.date
+				bid,uid,inout.action,inout.date
 			]);
 			save('uid', inout.uid);
 			save('user', user);
@@ -47,7 +36,12 @@ $(function () {
 			alert('该床有人，请先搬出');
 		}
 	}
-	var filterApi=function(){
+	var actionFilter=function(){
+		return function(){
+			return true;
+		}
+	}
+	var bsFilter=function(){
 		//房间，房间状态，开始时间，结束时间
 		var s=getFormData($('#searchForm'));
 		var room=s.room,status=s.status,from=s.from,to=s.to;
@@ -59,7 +53,7 @@ $(function () {
 			bid=o[0];
 			info=o[1].split(',');
 			uid=info[0];
-			date=info[1];
+			date=info[1]||0;
 			if(room>0){
 				flag=(bid/10|0)==room;
 				if(!flag)return false;
@@ -90,33 +84,87 @@ $(function () {
 		if(day<10)day='0'+day;
 		return y+'-'+m+'-'+day;
 	}
-	//显示床位
-	var show=window.show=function(page){
-		var $el,len,roomId,size,totalpage,info,html,user,uid,name,bs=get('bs',true);
-		$el=$('#list').empty();
-		page=page||$('#page').html()||1;
-		size=$('#size').val();
-		status=$('#status').val();
-		bs=bs.replace(/\],/g,'\]_');
-		bs=bs.replace(/[\[\]{}"]/g,'').split('_');
-		bs=bs.filter(filterApi());
-		len=bs.length;
-		totalpage=1+(len+1)/size|0;
-		bs=bs.slice((page-1)*size,page*size);
-		$('#len').html(len);
-		$('#page').html(page);
-		$('#last').html(totalpage);
-		if(page==totalpage){
+	var getPage=function(page){
+		return {
+			page:page||$('#page').html()||1,
+			size:$('#size').val()
+		}
+	}
+	var pageHandler=function(p){
+		$('#page').html(p.page);
+		$('#len').html(p.record);
+		$('#last').html(p.totalpage);
+		if(p.page==p.totalpage){
 			$('#next').hide();
 		}else{
 			$('#next').show();
 		}
-		if(page==1){
+		if(p.page==1){
 			$('#prev').hide();
 		}else{
 			$('#prev').show();
 		}
-
+	
+	}
+	var showAction=menu.actionlog=window.sa=function(page){
+		var p,a,totalpage,html;
+		p=getPage(page);
+		page=p.page;
+		size=p.size;
+		a=get('action');
+		a=a.filter(actionFilter());
+		p.record=a.length;
+		p.totalpage=1+(p.record+1)/size|0;
+		pageHandler(p);
+		a=a.slice((page-1)*size,page*size);
+		a.sort(function(v1,v2){
+			var d1=v1[3];
+			var d2=v2[3];
+			return new Date(d1)<new Date(d2); 
+		});
+		renderAction(a);
+	}
+	var renderAction=function(a){
+		var user,sex,name,roomId,html='<table><thead><th>床位</th><th>姓名</th><th>性别</th><th>部门</th><th>职位</th><th>搬入还是搬出</th><th>日期</th><th>操作</th></thead><tbody>';
+		a.forEach(function(v){
+			roomId=v[0];
+			uid=v[1];
+			action=v[2];
+			user=get('user')[uid]||{};
+			sex=user[1]||'';
+			name=user[0]||'空';
+			if(sex==1){
+				sex='男'
+			}else if(sex==2){
+				sex='女';
+			}
+			action={1:'搬入',2:'搬出'}[action]||'';
+			var act=''
+			var dept=user[2]||'';
+			var job=user[3]||'';
+			var date=v[3]||'';
+			html+='<tr class="data" id="'+roomId+'"><td>'+roomId+'</td><td>'+name+'</td><td>'+sex+'</td><td>'+dept+'</td><td>'+job+'</td><td>'+action+'</td><td>'+date+'</td><td>'+act+'</td></tr>';
+		});
+		html+='</tbody></table>';
+		$('#actionlog').html(html);
+	}
+	//显示床位
+	var showBed=menu.index=window.show=function(page){
+		var p,size,totalpage,bs=get('bs',true);
+		p=getPage(page);
+		page=p.page;
+		size=p.size;
+		bs=bs.replace(/\],/g,'\]_');
+		bs=bs.replace(/[\[\]{}"]/g,'').split('_');
+		bs=bs.filter(bsFilter());
+		p.record=bs.length;
+		p.totalpage=1+(p.record+1)/size|0;
+		pageHandler(p);
+		bs=bs.slice((page-1)*size,page*size);
+		renderBed(bs);
+	}
+	var renderBed=function(bs){
+		var roomId,info,user,uid,name,
 		html='<table><thead><th>床位</th><th>姓名</th><th>性别</th><th>部门</th><th>职位</th><th>搬入日期</th><th>操作</th></thead><tbody>';
 		bs.forEach(function(v){
 			v=v.split(':');
@@ -140,8 +188,8 @@ $(function () {
 			var date=info[1]||'';
 			html+='<tr class="data" id="'+roomId+'"><td>'+roomId+'</td><td>'+name+'</td><td>'+sex+'</td><td>'+dept+'</td><td>'+job+'</td><td>'+date+'</td><td>'+act+'</td></tr>';
 		});
-		html+='</tbody></table>'
-		$el.html(html);
+		html+='</tbody></table>';
+		$('#list').html(html);
 	}
 	$('#prev').click(function(){
 		var p=$('#page');
@@ -181,7 +229,14 @@ $(function () {
 		save('action',action);
 		show();
 		return false;
-	})
+	});
+	$('#menu').on('click','a',function(){
+		$('.content').hide();
+		$('#'+this.id+'_content').show();
+		show={bed:showBed,action:showAction}[this.id];
+		show();
+		return false;
+	});
 	//录入事件
 	$('#in').click(function () {
 		var inout=getFormData($('#inform'));
@@ -199,7 +254,7 @@ $(function () {
 
 	});
 	var init = function () {
-		var room, bed, i, j, bid, bs, bedstatus = {};
+		var i, j, bid, bs, bedstatus = {};
 		if (!get('bs')) {
 			for (i = 601; i < 615; i++) {
 				for (j = 1; j < 6; j++) {
@@ -220,11 +275,9 @@ $(function () {
 			save('action', []);
 			save('uid', 0);
 		}
-		return bs;
 	}
 	init();
 	var room = [];
-	var bed = [1, 2, 3, 4, 5];
 	for (var i = 601; i < 615; i++) {
 		room.push(i);
 	}
@@ -238,10 +291,16 @@ $(function () {
 		});
 		obj.append(str);
 	}
-	generateSelect($('#room,#room2'), room);
-	generateSelect($('#bed'), bed);
-	$('#date').datepicker();
-	$('#from').datepicker();
-	$('#to').datepicker();
+	generateSelect($('.room'), room);
+	generateSelect($('.bed'), [1,2,3,4,5]);
+	generateSelect($('#size'), [10,15,20,25,30,35]);
+	var from=$('.from').datepicker({ defaultDate:-7,maxDate:0,onClose:function(){
+		to.datepicker('option','minDate',this.value);
+	}});
+	var to=$('.to').datepicker({ maxDate:0,onClose:function(){
+		from.datepicker('option','maxDate',this.value);
+	}});
+	$('#date').datepicker({maxDate:0})
+	show=showBed;
 	show();
 });
