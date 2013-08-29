@@ -1,5 +1,5 @@
 $(function () {
-	var show,menu={};
+	var show;
 
 	var save = function (name, json) {
 		localStorage.setItem(name, JSON.stringify(json));
@@ -36,14 +36,40 @@ $(function () {
 			alert('该床有人，请先搬出');
 		}
 	}
+	var actionForm=window.f=$('#actionForm');
 	var actionFilter=function(){
-		return function(){
+		var af=getFormData(actionForm);
+		console.log(af);
+		var room=af.room,name=af.name,from=af.from,to=af.to,sex=af.sex;
+		if(from)from=new Date(from);
+		if(to)to=new Date(to);
+		return function(o){
+			var date,bid,info,uid,flag=true;
+			bid=o[0];
+			uid=o[1];
+			sex=o[2];
+			date=o[3]
+			if(name){
+			}
+			if(room>0){
+				flag=(bid/10|0)==room;
+				if(!flag)return false;
+			}
+			if(from){
+				flag=from<=new Date(date);
+				if(!flag)return false;
+			}
+			if(to){
+				flag=to>=new Date(date);
+				if(!flag)return false;
+			}
 			return true;
 		}
 	}
+	var searchForm=$('#searchForm');
 	var bsFilter=function(){
 		//房间，房间状态，开始时间，结束时间
-		var s=getFormData($('#searchForm'));
+		var s=getFormData(searchForm);
 		var room=s.room,status=s.status,from=s.from,to=s.to;
 		if(from)from=new Date(from);
 		if(to)to=new Date(to);
@@ -143,7 +169,7 @@ $(function () {
 		$('#actionlog').html(html);
 	}
 	//显示床位
-	var showBed=menu.index=window.show=function(page){
+	var showBed=function(page){
 		var p,size,totalpage,bs=get('bs',true);
 		p=getPage(page);
 		page=p.page;
@@ -168,7 +194,7 @@ $(function () {
 			user=get('user')[uid]||{};
 			name=user[0];
 			if(name){
-			name= '<a href="#" id="'+uid+'" title="点击编辑人员信息">'+name+'</a>';
+			name= '<a href="#" class="name" id="'+uid+'" title="点击编辑人员信息">'+name+'</a>';
 			}else{
 			name='空';
 			}
@@ -214,7 +240,7 @@ $(function () {
 		show();
 		return false;
 	});
-	$('#search').click(function(){
+	$('.search').click(function(){
 		show(1);
 	});
 	$('#size').change(function(){
@@ -239,6 +265,27 @@ $(function () {
 		};
 		return false;
 	});
+	var mask=$('#mask').click(function(){
+		mask.hide();
+		editUser.hide();
+	});
+	var editUser=$('#editUser').on('click','.update',function(){
+		var form=editUser.find('form');
+		var user=getFormData(form);
+		var users=get('user');
+		users[user.uid]=[user.name,user.sex,user.dept,user.job,user.remark];
+		save('user',users);
+		mask.click();
+		show();
+	}).on('keydown',function(e){
+		var k=e.keyCode;
+		if(k===13){//按回车
+			editUser.find('.update').click();
+		}else if(k===27){//按Esc
+			mask.click();
+		}
+	});
+	editUser.tmpl=$.trim(editUser.html());
 	$('#list').on('click','.out',function(){
 		var $this=$(this);
 		var indate=$this.parent().prev().html();
@@ -272,18 +319,38 @@ $(function () {
 		$('#inform>#name').val('');
 		$('#inform>.room').val(r);
 		$('#inform>.bed').val(b);
+		return false;
 	}).on('click','.del',function(){
 		var $this=$(this);
 		var id=$this.parent().parent().attr('id');
-		console.log(id);
 		var bs=get('bs');
-		console.log(bs);
 		if(confirm('确定删除床位'+id+'?')){
 			delete bs[id];
 			save('bs',bs);
 			show();
 		}
-		
+		return false;
+	}).on('click','.name',function(){
+		var html,uid=this.id;
+		var users=get('user');
+		var user=users[uid];
+		if(user){
+			var name=user[0],
+			sex=user[1],
+			dept=user[2]||'',
+			job=user[3]||'',
+			remark=user[4]||'';
+			html=editUser.tmpl;
+			html=html.replace(/\{name\}/,name);
+			html=html.replace(/\{uid\}/,uid);
+			html=html.replace(/\{male\}/,{1:'checked',2:''}[sex]);
+			html=html.replace(/\{female\}/,{2:'checked',1:''}[sex]);
+			html=html.replace(/\{dept\}/,dept);
+			html=html.replace(/\{job\}/,job);
+			mask.show();
+			editUser.html(html).show().find('.name').focus();
+		}
+		return false;
 	});
 	$('#menu').on('click','a',function(){
 		$('.content').hide();
@@ -293,8 +360,9 @@ $(function () {
 		return false;
 	});
 	//录入事件
+	var inform=getFormData($('#inform'));
 	$('#in').click(function () {
-		var inout=getFormData($('#inform'));
+		var inout=getFormData(inform);
 		if(!inout.name||!inout.date){
 			alert('姓名，日期不能为空',inout);
 		}else{
@@ -306,7 +374,7 @@ $(function () {
 			});
 			inlog(inout);
 		}
-
+		return false;
 	});
 	var init = function () {
 		var i, j, bid, bs, bedstatus = {};
