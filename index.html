@@ -9,13 +9,14 @@
 	<script src="ui/jquery.ui.widget.js"></script>
 	<script src="ui/jquery.ui.datepicker.js"></script>
 	<script src="ui/i18n/jquery.ui.datepicker-zh-CN.js"></script>
+	<script type="text/javascript" src='js/box.js'></script>
 	<script type="text/javascript" src='js/main.js'></script>
 </head>
 <body>
 	<div id="menu">
 		<ul>
-			<li> <a id='bed' href="">房间管理</a> </li>
-			<li> <a id='action' href="">搬入搬出记录</a></li>
+			<li> <a id='bed' href="">入住情况</a> </li>
+			<li> <a id='action' href="">变动记录</a></li>
 		</ul>
 	</div>
 	<div id="bed_content" class='content'>
@@ -28,8 +29,10 @@
 			部门<input id="dept" name="dept" type="text" />
 			职位<input id="job" name="job" type="text" />
 			搬入日期<input id="date" name="date" type="text" />
-			<input id="in" name="" type="button" value='录入' /><br/>
+			<input id="in" name="" type="button" value='搬入' /><br/>
 		</form>
+		<hr />
+		
 		<div>
 			<form id="searchForm" action="">
 				<select class="room" name="room">
@@ -40,8 +43,9 @@
 					<option value="1">空床</option>
 					<option value="2">有人的床</option>
 				</select>
-			日期<input class='from' name="form" type="text" />
+			日期<input class='from' name="from" type="text" />
 			到<input class='to' name="to" type="text" />
+			<input  name="" type="reset" value='reset' />
 				<input id='search' type="button" value='查询' />
 			</form>
 		</div>
@@ -56,15 +60,16 @@
 					<option value="1">男</option>
 					<option value="2">女</option>
 				</select>
-			<br />
 				<select  name="action">
 					<option value="0">搬入搬出</option>
 					<option value="1">搬入</option>
 					<option value="2">搬出</option>
 				</select>
 		
-			日期<input class='from' name="form" type="text" />
-			到<input class='to' name="to" type="text" />
+			<br />
+			日期<input class='date from' name="form" type="text" />
+			到<input class='date to' name="to" type="text" />
+			<input id="reset" name="" type="button" value='清空日期' />
 			<input id="in" name="" type="button" value='查询' /><br/>
 		</form>
 		<div id="actionlog"> </div>
@@ -79,6 +84,19 @@
 		当前页: <span id='page'></span>
 		<a id="next" href=''>下一页</a>
 		总页数:<a id="last" href=''></a>
+	</div>
+
+	<div id="mask" style="display:none;position: absolute;top:0;left:0;background-color: rgb(119, 119, 119); opacity: 0.7; cursor: pointer; width:100%;height: 100%;z-index: 1100;"></div>
+	<div id='editUser'>
+		<form action="">
+		姓名 <input class='name' type="" />
+		性别 男<input class='sex' name="" type="radio" /> 女<input class='sex' name="" type="radio" />
+		部门 <input class='dept' type="" />
+		职位 <input class='job' type="" />
+		备注 <input class='remark' type="" />
+		<input type="reset" value='清空' />
+		<input type="button" value ='修改' />
+		</form>
 	</div>
 </body>
 </html>

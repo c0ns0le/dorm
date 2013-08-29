@@ -17,7 +17,7 @@ $(function () {
 	}
 	var inlog = function (inout) {
 		var uid,bid = inout.bid;
-		var bs = get('bs'),
+		var uniqueId,bs = get('bs'),
 		user = get('user')||{},
 		action = get('action')||[];
 		if (bs[bid][0] === 0) {
@@ -25,7 +25,7 @@ $(function () {
 			bs[bid] = [uid,inout.date];
 			user[uid]=[inout.name,inout.sex,inout.dept,inout.job];
 			action.push([
-				bid,uid,inout.action,inout.date
+				bid,uid,inout.action,inout.date,uid
 			]);
 			save('uid', inout.uid);
 			save('user', user);
@@ -48,7 +48,7 @@ $(function () {
 		if(from)from=new Date(from);
 		if(to)to=new Date(to);
 		return function(o){
-			var bid,info,uid,flag=true;
+			var date,bid,info,uid,flag=true;
 			o=o.split(':');
 			bid=o[0];
 			info=o[1].split(',');
@@ -76,17 +76,11 @@ $(function () {
 			return flag;
 		};
 	}
-	var fDate=function(d){
-		var y=d.getFullYear();
-		var m=d.getMonth()+1;
-		var day=d.getDate();
-		if(m<10)m='0'+m;
-		if(day<10)day='0'+day;
-		return y+'-'+m+'-'+day;
-	}
 	var getPage=function(page){
+		page=page||$('#page').html()||1;
+		if(page<1)page=1;
 		return {
-			page:page||$('#page').html()||1,
+			page:page,
 			size:$('#size').val()
 		}
 	}
@@ -94,19 +88,19 @@ $(function () {
 		$('#page').html(p.page);
 		$('#len').html(p.record);
 		$('#last').html(p.totalpage);
-		if(p.page==p.totalpage){
+		if(p.page>=p.totalpage){
 			$('#next').hide();
 		}else{
 			$('#next').show();
 		}
-		if(p.page==1){
+		if(p.page<=1){
 			$('#prev').hide();
 		}else{
 			$('#prev').show();
 		}
 	
 	}
-	var showAction=menu.actionlog=window.sa=function(page){
+	var showAction=function(page){
 		var p,a,totalpage,html;
 		p=getPage(page);
 		page=p.page;
@@ -114,7 +108,7 @@ $(function () {
 		a=get('action');
 		a=a.filter(actionFilter());
 		p.record=a.length;
-		p.totalpage=1+(p.record+1)/size|0;
+		p.totalpage=1+(p.record-1)/size|0;
 		pageHandler(p);
 		a=a.slice((page-1)*size,page*size);
 		a.sort(function(v1,v2){
@@ -139,11 +133,11 @@ $(function () {
 				sex='女';
 			}
 			action={1:'搬入',2:'搬出'}[action]||'';
-			var act=''
+			var act='<a class="dellog" href="#">删除此记录</a>'
 			var dept=user[2]||'';
 			var job=user[3]||'';
 			var date=v[3]||'';
-			html+='<tr class="data" id="'+roomId+'"><td>'+roomId+'</td><td>'+name+'</td><td>'+sex+'</td><td>'+dept+'</td><td>'+job+'</td><td>'+action+'</td><td>'+date+'</td><td>'+act+'</td></tr>';
+			html+='<tr class="data" id="'+v[4]+'"><td>'+roomId+'</td><td>'+name+'</td><td>'+sex+'</td><td>'+dept+'</td><td>'+job+'</td><td>'+action+'</td><td>'+date+'</td><td>'+act+'</td></tr>';
 		});
 		html+='</tbody></table>';
 		$('#actionlog').html(html);
@@ -158,13 +152,13 @@ $(function () {
 		bs=bs.replace(/[\[\]{}"]/g,'').split('_');
 		bs=bs.filter(bsFilter());
 		p.record=bs.length;
-		p.totalpage=1+(p.record+1)/size|0;
+		p.totalpage=1+(p.record-1)/size|0;
 		pageHandler(p);
 		bs=bs.slice((page-1)*size,page*size);
 		renderBed(bs);
 	}
 	var renderBed=function(bs){
-		var roomId,info,user,uid,name,
+		var roomId,info,user,uid,act,name,
 		html='<table><thead><th>床位</th><th>姓名</th><th>性别</th><th>部门</th><th>职位</th><th>搬入日期</th><th>操作</th></thead><tbody>';
 		bs.forEach(function(v){
 			v=v.split(':');
@@ -172,10 +166,16 @@ $(function () {
 			info=v[1].split(',');
 			uid=info[0];
 			user=get('user')[uid]||{};
-			name=user[0]||'空';
-			var act='';
+			name=user[0];
+			if(name){
+			name= '<a href="#" id="'+uid+'" title="点击编辑人员信息">'+name+'</a>';
+			}else{
+			name='空';
+			}
 			if(uid>0){
-				act= '<a class="out" href="#">搬出</a>';
+				act= '<a class="out" href="#" title="点击会弹出日期选择框选择搬出日期">搬出</a><input style="display:none" placeholder="请选择搬出日期" type="text" />';
+			}else{
+				act= '<a class="del" href="#">删除床位</a>';
 			}
 			var sex=user[1]||'';
 			if(sex==1){
@@ -192,15 +192,16 @@ $(function () {
 		$('#list').html(html);
 	}
 	$('#prev').click(function(){
-		var p=$('#page');
-		p.html(+p.html()-1);
-		show();
+		var $p=$('#page'),p=$p.html();
+		p=p-1;
+		p=p>0?p:1;
+		show(p);
 		return false;
 	});
 	$('#next').click(function(){
-		var p=$('#page');
-		p.html(+p.html()+1);
-		show();
+		var $p=$('#page'),p=$p.html();
+		p=+p+1;
+		show(p);
 		return false;
 	});
 	$('#first').click(function(){
@@ -216,25 +217,79 @@ $(function () {
 	$('#search').click(function(){
 		show(1);
 	});
+	$('#size').change(function(){
+		show(1);
+	});
+	$('#reset').click(function(){
+		$('.date').val('');
+	});
+	$('#actionlog').on('click','.dellog',function(){
+		var id,thisId,action=get('action');
+		thisId=$(this).parent().parent().attr('id');
+		for(var i=action.length;i--;){
+			id=action[i][4];
+			if(id==thisId){
+			if(confirm('确定删除此记录？')){
+				action.splice(i,1);
+				save('action',action);
+				show();
+			}
+				break;
+			}
+		};
+		return false;
+	});
 	$('#list').on('click','.out',function(){
 		var $this=$(this);
-		var bid=$this.parent().parent()[0].id;
-		var bs=get('bs');
-		var action=get('action')||[];
-		var uid=bs[bid][0];
-		var date=fDate(new Date);
-		action.push([bid,uid,2,date]);
-		bs[bid]=[0];
-		save('bs',bs);
-		save('action',action);
-		show();
+		var indate=$this.parent().prev().html();
+		var d=$this.next().datepicker({
+		minDate:indate,
+		onClose:function(){
+			d.hide();
+		},
+		onSelect:function(){
+			var date=$.datepicker.formatDate('yy-mm-dd',d.datepicker("getDate"));
+			if(confirm('确定'+date+'搬出？')){
+				var bid=$this.parent().parent()[0].id;
+				var bs=get('bs');
+				var action=get('action')||[];
+				var uid=bs[bid][0];
+				var uniqueId=get('uid');
+				action.push([bid,uid,2,date,++uniqueId]);
+				bs[bid]=[0];
+				save('bs',bs);
+				save('action',action);
+				save('uid',uniqueId);
+				show();
+			}
+		}
+		}).show().datepicker("show");
 		return false;
+	}).on('click','tr',function(){
+		var id=this.id;
+		var r=id.slice(0,3);
+		var b=id.slice(3);
+		$('#inform>#name').val('');
+		$('#inform>.room').val(r);
+		$('#inform>.bed').val(b);
+	}).on('click','.del',function(){
+		var $this=$(this);
+		var id=$this.parent().parent().attr('id');
+		console.log(id);
+		var bs=get('bs');
+		console.log(bs);
+		if(confirm('确定删除床位'+id+'?')){
+			delete bs[id];
+			save('bs',bs);
+			show();
+		}
+		
 	});
 	$('#menu').on('click','a',function(){
 		$('.content').hide();
 		$('#'+this.id+'_content').show();
 		show={bed:showBed,action:showAction}[this.id];
-		show();
+		show(1);
 		return false;
 	});
 	//录入事件
@@ -294,13 +349,13 @@ $(function () {
 	generateSelect($('.room'), room);
 	generateSelect($('.bed'), [1,2,3,4,5]);
 	generateSelect($('#size'), [10,15,20,25,30,35]);
-	var from=$('.from').datepicker({ defaultDate:-7,maxDate:0,onClose:function(){
+	$.datepicker.setDefaults({maxDate:0});
+	var from=$('.from').datepicker({ defaultDate:-7,onSelect:function(){
 		to.datepicker('option','minDate',this.value);
 	}});
-	var to=$('.to').datepicker({ maxDate:0,onClose:function(){
+	var to=$('.to').datepicker({onSelect:function(){
 		from.datepicker('option','maxDate',this.value);
 	}});
-	$('#date').datepicker({maxDate:0})
-	show=showBed;
-	show();
+	$('#date').datepicker()
+	$('#bed').click();
 });
