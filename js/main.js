@@ -145,9 +145,11 @@ $(function () {
 		renderAction(a);
 	}
 	var renderAction=function(a){
-		var user,sex,name,roomId,html='<table><thead><th>床位</th><th>姓名</th><th>性别</th><th>部门</th><th>职位</th><th>搬入还是搬出</th><th>日期</th><th>操作</th></thead><tbody>';
+		var bid,bNo,user,sex,name,roomId,html='<table><thead><th>房间</th><th>床位</th><th>姓名</th><th>性别</th><th>部门</th><th>职位</th><th>搬入搬出</th><th>日期</th><th>操作</th></thead><tbody>';
 		a.forEach(function(v){
 			roomId=v[0];
+			bid=roomId.slice(0,3);
+			bNo=roomId.slice(3);
 			uid=v[1];
 			action=v[2];
 			user=get('user')[uid]||{};
@@ -159,11 +161,11 @@ $(function () {
 				sex='女';
 			}
 			action={1:'搬入',2:'搬出'}[action]||'';
-			var act='<a class="dellog" href="#">删除此记录</a>'
+			var act='<a class="dellog" href="#">删除记录</a>'
 			var dept=user[2]||'';
 			var job=user[3]||'';
 			var date=v[3]||'';
-			html+='<tr class="data" id="'+v[4]+'"><td>'+roomId+'</td><td>'+name+'</td><td>'+sex+'</td><td>'+dept+'</td><td>'+job+'</td><td>'+action+'</td><td>'+date+'</td><td>'+act+'</td></tr>';
+			html+='<tr class="data" id="'+v[4]+'"><td>'+bid+'</td><td>'+bNo+'</td><td>'+name+'</td><td>'+sex+'</td><td>'+dept+'</td><td>'+job+'</td><td>'+action+'</td><td>'+date+'</td><td>'+act+'</td></tr>';
 		});
 		html+='</tbody></table>';
 		$('#actionlog').html(html);
@@ -184,11 +186,13 @@ $(function () {
 		renderBed(bs);
 	}
 	var renderBed=function(bs){
-		var roomId,info,user,uid,act,name,
-		html='<table><thead><th>床位</th><th>姓名</th><th>性别</th><th>部门</th><th>职位</th><th>搬入日期</th><th>操作</th></thead><tbody>';
+		var roomId,info,user,uid,act,name,bid,bNo,
+		html='<table><thead><th>房间</th><th>床位</th><th>姓名</th><th>性别</th><th>部门</th><th>职位</th><th>搬入日期</th><th>操作</th></thead><tbody>';
 		bs.forEach(function(v){
 			v=v.split(':');
 			roomId=v[0];
+			bid=roomId.slice(0,3);
+			bNo=roomId.slice(3);
 			info=v[1].split(',');
 			uid=info[0];
 			user=get('user')[uid]||{};
@@ -212,7 +216,7 @@ $(function () {
 			var dept=user[2]||'';
 			var job=user[3]||'';
 			var date=info[1]||'';
-			html+='<tr class="data" id="'+roomId+'"><td>'+roomId+'</td><td>'+name+'</td><td>'+sex+'</td><td>'+dept+'</td><td>'+job+'</td><td>'+date+'</td><td>'+act+'</td></tr>';
+			html+='<tr class="data" id="'+roomId+'"><td>'+bid+'</td><td>'+bNo+'</td><td>'+name+'</td><td>'+sex+'</td><td>'+dept+'</td><td>'+job+'</td><td>'+date+'</td><td>'+act+'</td></tr>';
 		});
 		html+='</tbody></table>';
 		$('#list').html(html);
@@ -316,7 +320,7 @@ $(function () {
 		var id=this.id;
 		var r=id.slice(0,3);
 		var b=id.slice(3);
-		$('#inform>#name').val('');
+		$('#inform>#name').val('').focus();
 		$('#inform>.room').val(r);
 		$('#inform>.bed').val(b);
 		return false;
@@ -347,6 +351,7 @@ $(function () {
 			html=html.replace(/\{female\}/,{2:'checked',1:''}[sex]);
 			html=html.replace(/\{dept\}/,dept);
 			html=html.replace(/\{job\}/,job);
+			html=html.replace(/\{remark\}/,remark);
 			mask.show();
 			editUser.html(html).show().find('.name').focus();
 		}
@@ -360,7 +365,7 @@ $(function () {
 		return false;
 	});
 	//录入事件
-	var inform=getFormData($('#inform'));
+	var inform=$('#inform');
 	$('#in').click(function () {
 		var inout=getFormData(inform);
 		if(!inout.name||!inout.date){
@@ -416,7 +421,7 @@ $(function () {
 	}
 	generateSelect($('.room'), room);
 	generateSelect($('.bed'), [1,2,3,4,5]);
-	generateSelect($('#size'), [10,15,20,25,30,35]);
+	generateSelect($('#size'), [15,20,25,30,35,40,50]);
 	$.datepicker.setDefaults({maxDate:0});
 	var from=$('.from').datepicker({ defaultDate:-7,onSelect:function(){
 		to.datepicker('option','minDate',this.value);
