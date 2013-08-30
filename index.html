@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
-	<title></title>
+	<title>宿舍管理系统</title>
 	<link href="themes/base/jquery.ui.all.css" rel="stylesheet"></link>
 	<link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
 	<script type="text/javascript" src='js/jquery.min.js'></script>
@@ -16,7 +16,7 @@
 		select{
 			width:70px;
 		}
-		select.status,select.room{
+		select.action,select.status,select.room{
 			width:100px;
 		}
 		input[type=text]{
@@ -28,25 +28,28 @@
 	</style>
 </head>
 <body>
-	<div id="menu">
-		<ul>
-			<li> <a id='bed' href="">入住情况</a> </li>
-			<li> <a id='action' href="">变动记录</a></li>
+<div class="container">
+	<div id="menu" >
+		<ul class='nav nav-tabs'>
+			<li id='bed'> <a  href="">入住情况</a> </li>
+			<li id='action'> <a  href="">变动记录</a></li>
 		</ul>
 	</div>
+	
 	<div id="bed_content" class='content'>
-		<form id='inform' action="">
-			房间<select class='room' name="roomId"></select>
-			床号<select class="bed" name="bid"></select>
-			姓名<input class="name" name="name" type="text" />
-			男<input name="sex" checked type="radio" value=1 />女<input name="sex" value=2 type="radio" />
-			部门<input id="dept" name="dept" type="text" />
-			职位<input id="job" name="job" type="text" />
-			搬入日期<input id="date" name="date" type="text" />
-			<a href="#" class='btn btn-large btn-block' id='in' >搬入</a>
+		<form id='inform' class='form-search form-inline' action="">
+			<label>房间<select class='room' name="roomId"></select></label>
+			<label>床号<select class="bed" name="bid"></select></label>
+			<label><input class="name" placeholder='姓名' name="name" type="text" /></label>
+			<label>男<input name="sex" checked type="radio" value=1 /></label>
+			<label>女<input name="sex" value=2 type="radio" /></label>
+			<label><input id="dept" placeholder='部门' name="dept" type="text" /></label>
+			<label><input id="job" placeholder='职位' name="job" type="text" /></label>
+			<label>搬入日期<input id="date" name="date" type="text" /></label>
+			<a href="#" class='btn btn-large ' id='in' >搬入</a>
 		</form>
 		<div>
-			<form id="searchForm" action="">
+			<form id="searchForm" class="form-search form-inline">
 				<select class="room" name="room">
 					<option value="0">所有房间</option>
 				</select>
@@ -55,23 +58,23 @@
 					<option value="1">空床</option>
 					<option value="2">有人的床</option>
 				</select>
-			姓名<input name="name" type="text" />
-			部门<input name="dept" type="text" />
+			<input placeholder='姓名' name="name" type="text" />
+			<input placeholder='部门' name="dept" type="text" />
 				<select  name="sex">
 					<option value="0">性别</option>
 					<option value="1">男</option>
 					<option value="2">女</option>
 				</select>
-			日期<input class='from' name="from" type="text" />
-			到<input class='to' name="to" type="text" />
+			<label>日期<input class='from' name="from" type="text" /></label>
+			<label>到<input class='to' name="to" type="text" /></label>
 			<input type="reset" value="重置" class='btn btn-large' />
-			<input type="button" value="查询" class='search btn btn-large' />
+			<a href="#" class="search btn btn-large"><i class='icon-search'></i> 查询</a>
 			</form>
 		</div>
 		<div id="list"> </div>
 	</div>
 	<div id='action_content' class='content'>
-		<form id='actionForm' action="">
+		<form id='actionForm' class='form-search form-inline'>
 			<select class="room" name="room">
 				<option value="0" >所有房间</option>
 			</select>
@@ -80,17 +83,17 @@
 					<option value="1">男</option>
 					<option value="2">女</option>
 				</select>
-				<select  name="action">
+				<select  class='action' name="action">
 					<option value="0">搬入搬出</option>
 					<option value="1">搬入</option>
 					<option value="2">搬出</option>
 				</select>
-			姓名<input name="name" type="text" />
-			部门<input name="dept" type="text" />
-			日期<input class='date from' name="from" type="text" />
-			到<input class='date to' name="to" type="text" />
+			<input placeholder='姓名' name="name" type="text" />
+			<input placeholder='部门' name="dept" type="text" />
+			<label>日期<input class='date from' name="from" type="text" /></label>
+			<label>到<input class='date to' name="to" type="text" /></label>
 			<input type="reset" value="重置" class='btn btn-large' />
-			<input type="button" value="查询" class='search btn btn-large' />
+			<a href="#" class="search btn btn-large"><i class='icon-search'></i> 查询</a>
 		</form>
 		<div id="actionlog"> </div>
 	</div>
@@ -99,16 +102,19 @@
 		<select id="size" ></select>
 		记录数: <span id='len'></span>
 	</div>
-	<div>
-		<a id="first" href=''>首页</a>
-		<a id="prev" href=''>上一页</a>
-		当前页: <span id='page'></span>
-		<a id="next" href=''>下一页</a>
-		总页数:<a id="last" href=''></a>
+	<div class="pagination">
+		<ul>
+			<li><a id="first" href=''>首页</a> </li>
+			<li id='prev'><a href=''>上一页</a> </li>
+			<li><span id='page'></span> </li>
+			<li id="next"><a  href=''>下一页</a></li>
+			<li><a id="last" href=''></a></li>
+		</ul>
 	</div>
+</div>
 
 	<div id="mask" style="display:none;position: absolute;top:0;left:0;background-color: rgb(119, 119, 119); opacity: 0.7; cursor: pointer; width:100%;height: 100%;z-index: 1100;"></div>
-	<div id='editUser' style="padding:20px;background-color:white;position:absolute;top:35%;left:35%;z-index:1200;display:none;">
+	<div id='editUser' style="padding:25px;background-color:white;position:absolute;top:35%;left:35%;z-index:1200;display:none;">
 		<form action="">
 			<input name="uid" value='{uid}' type="hidden" />
 			姓名 <input class='name' name='name' type="text" value={name} />
@@ -121,7 +127,7 @@
 			备注 <input class='remark' type="text" name='remark' value="{remark}"/>
 			<br />
 			<input type="reset" class='btn btn-large' value='重置' />
-			<input type="button" class='btn btn-large update' value ='修改' />
+			<input type="button" class='btn btn-large update btn-primary' value ='修改' />
 		</form>
 	</div>
 </body>

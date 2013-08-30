@@ -156,14 +156,14 @@ $(function () {
 		$len.html(p.record);
 		$last.html(p.totalpage);
 		if(p.page>=p.totalpage){
-			$next.hide();
+			$next.addClass('disabled');
 		}else{
-			$next.show();
+			$next.removeClass('disabled');
 		}
 		if(p.page<=1){
-			$prev.hide();
+			$prev.addClass('disabled');
 		}else{
-			$prev.show();
+			$prev.removeClass('disabled');
 		}
 	
 	}
@@ -189,7 +189,7 @@ $(function () {
 	}
 	var renderAction=function(a,isExport){
 		var bid,bNo,user,sex,name,roomId,html;
-		html='<table class="table"><thead><th>房间</th><th>床位</th><th>姓名</th><th>性别</th><th>部门</th>'
+		html='<table class="table table-hover table-striped"><thead><th>房间</th><th>床位</th><th>姓名</th><th>性别</th><th>部门</th>'
 		+'<th>职位</th><th>搬入搬出</th><th>日期</th>'+(isExport?'':'<th>操作</th>')+'</thead><tbody>';
 
 		a.forEach(function(v){
@@ -236,7 +236,7 @@ $(function () {
 	}
 	var renderBed=function(bs,isExport){
 		var roomId,info,user,uid,act,name,bid,bNo,html;
-		html='<table class="table"><thead><th>房间</th><th>床位</th><th>姓名</th><th>性别</th><th>部门</th><th>职位</th><th>搬入日期</th>'+(!isExport?'<th>操作</th>':'')+'</thead><tbody>';
+		html='<table class="table table-hover table-striped"><thead><th>房间</th><th>床位</th><th>姓名</th><th>性别</th><th>部门</th><th>职位</th><th>搬入日期</th>'+(!isExport?'<th>操作</th>':'')+'</thead><tbody>';
 		bs.forEach(function(v){
 			v=v.split(':');
 			roomId=v[0];
@@ -271,13 +271,15 @@ $(function () {
 		return html;
 	}
 	$prev.click(function(){
-		var $p=$page,p=$p.html();
+		if($prev.is('.disabled'))return false;
+		var p=$page.html();
 		p=p-1;
 		p=p>0?p:1;
 		show(p);
 		return false;
 	});
 	$next.click(function(){
+		if($next.is('.disabled'))return false;
 		var p=$page.html();
 		show(+p+1);
 		return false;
@@ -401,7 +403,9 @@ $(function () {
 		}
 		return false;
 	});
-	$('#menu').on('click','a',function(){
+	var $menu=$('#menu').on('click','li',function(){
+		$menu.find('li').removeClass('active');
+		this.className='active';
 		$('.content').hide();
 		$('#'+this.id+'_content').show();
 		show={bed:showBed,action:showAction}[this.id];
