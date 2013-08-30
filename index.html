@@ -11,10 +11,15 @@
 	<script src="ui/i18n/jquery.ui.datepicker-zh-CN.js"></script>
 	<script type="text/javascript" src='js/main.js'></script>
 	<style type="text/css">
-td{
-	width:85px;
-	text-align:center;
-}
+		td,tr{
+			padding:0 15px;
+		}
+		input[type=text]{
+			width:100px;
+		}
+		input.remark{
+			width:245px;
+		}
 	</style>
 </head>
 <body>
@@ -28,7 +33,7 @@ td{
 		<form id='inform' action="">
 			房间<select class='room' name="roomId"></select>
 			床号<select class="bed" name="bid"></select>
-			姓名<input id="name" name="name" type="text" />
+			姓名<input class="name" name="name" type="text" />
 			性别:男<input name="sex" checked type="radio" value=1 />女<input name="sex" value=2 type="radio" />
 			<br />
 			部门<input id="dept" name="dept" type="text" />
@@ -48,9 +53,17 @@ td{
 					<option value="1">空床</option>
 					<option value="2">有人的床</option>
 				</select>
+			姓名<input name="name" type="text" />
+			部门<input name="dept" type="text" />
+				<select  name="sex">
+					<option value="0">性别</option>
+					<option value="1">男</option>
+					<option value="2">女</option>
+				</select>
+				<br />
 			日期<input class='from' name="from" type="text" />
 			到<input class='to' name="to" type="text" />
-			<input  name="" type="reset" value='reset' />
+			<input  name="" type="reset" value='重置' />
 				<input class='search' type="button" value='查询' />
 			</form>
 		</div>
@@ -61,7 +74,6 @@ td{
 			<select class="room" name="room">
 				<option value="0" >所有房间</option>
 			</select>
-			姓名<input id="name" name="name" type="text" />
 				<select  name="sex">
 					<option value="0">性别</option>
 					<option value="1">男</option>
@@ -73,14 +85,18 @@ td{
 					<option value="2">搬出</option>
 				</select>
 			<br />
+			姓名<input name="name" type="text" />
+			部门<input name="dept" type="text" />
+			<br />
 			日期<input class='date from' name="from" type="text" />
 			到<input class='date to' name="to" type="text" />
-			<input id="reset" name="" type="button" value='清空日期' />
+			<input type="reset" value='重置' />
 			<input class='search' name="" type="button" value='查询' /><br/>
 		</form>
 		<div id="actionlog"> </div>
 	</div>
 	<div>
+		<a id='export' href="#">Excel</a>
 		页面大小<select id="size" name=""></select>
 		记录数: <span id='len'></span>
 	</div>
@@ -103,7 +119,7 @@ td{
 			部门 <input class='dept' type="text" name='dept' value="{dept}" />
 			职位 <input class='job' name='job' type="text" value="{job}"/>
 			<br />
-			备注 <input size=54 class='remark' type="text" name='remark' value="{remark}"/>
+			备注 <input class='remark' type="text" name='remark' value="{remark}"/>
 			<br />
 			<input type="reset" value='重置' />
 			<input type="button" class='update' value ='修改' />

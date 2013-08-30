@@ -1,5 +1,17 @@
 $(function () {
-	var show;
+	var show,table,
+	actionForm=$('#actionForm'),
+	searchForm=$('#searchForm'),
+	$page=$('#page'),
+	$size=$('#size'),
+	$last=$('#last'),
+	$next=$('#next'),
+	$prev=$('#prev'),
+	$len=$('#len'),
+	$actionlog=$('#actionlog'),
+	$list=$('#list'),
+	$first=$('#first'),
+	$inform=$('#inform');
 
 	var save = function (name, json) {
 		localStorage.setItem(name, JSON.stringify(json));
@@ -36,20 +48,35 @@ $(function () {
 			alert('该床有人，请先搬出');
 		}
 	}
-	var actionForm=window.f=$('#actionForm');
 	var actionFilter=function(){
 		var af=getFormData(actionForm);
-		console.log(af);
-		var room=af.room,name=af.name,from=af.from,to=af.to,sex=af.sex;
+		var room=af.room,name=af.name,from=af.from,to=af.to,sex=af.sex,action=af.action,dept=af.dept;
 		if(from)from=new Date(from);
 		if(to)to=new Date(to);
 		return function(o){
-			var date,bid,info,uid,flag=true;
+			var date,user,bid,info,uid,flag=true;
 			bid=o[0];
 			uid=o[1];
-			sex=o[2];
-			date=o[3]
+			o_action=o[2];
+			date=o[3];
 			if(name){
+				user=get('user')[uid];
+				flag=user[0].indexOf(name)>-1;
+				if(!flag)return false;
+			}
+			if(dept){
+				user=user||get('user')[uid];
+				flag=user && dept==user[2];
+				if(!flag)return false;
+			}
+			if(sex>0){
+				user=user||get('user')[uid];
+				flag=user[1]==sex;
+				if(!flag)return false;
+			}
+			if(action>0){
+				flag=action==o_action;
+				if(!flag)return false;
 			}
 			if(room>0){
 				flag=(bid/10|0)==room;
@@ -66,20 +93,34 @@ $(function () {
 			return true;
 		}
 	}
-	var searchForm=$('#searchForm');
 	var bsFilter=function(){
 		//房间，房间状态，开始时间，结束时间
 		var s=getFormData(searchForm);
-		var room=s.room,status=s.status,from=s.from,to=s.to;
+		var room=s.room,status=s.status,from=s.from,to=s.to,sex=s.sex,name=s.name,dept=s.dept;
 		if(from)from=new Date(from);
 		if(to)to=new Date(to);
 		return function(o){
-			var date,bid,info,uid,flag=true;
+			var user,date,bid,info,uid,flag=true;
 			o=o.split(':');
 			bid=o[0];
 			info=o[1].split(',');
 			uid=info[0];
 			date=info[1]||0;
+			if(name){
+				user=get('user')[uid];
+				flag=user && user[0].indexOf(name)>-1;
+				if(!flag)return false;
+			}
+			if(sex>0){
+				user=user||get('user')[uid];
+				flag=user && user[1]==sex;
+				if(!flag)return false;
+			}
+			if(dept){
+				user=user||get('user')[uid];
+				flag=user && dept==user[2];
+				if(!flag)return false;
+			}
 			if(room>0){
 				flag=(bid/10|0)==room;
 				if(!flag)return false;
@@ -103,26 +144,26 @@ $(function () {
 		};
 	}
 	var getPage=function(page){
-		page=page||$('#page').html()||1;
+		page=page||$page.html()||1;
 		if(page<1)page=1;
 		return {
 			page:page,
-			size:$('#size').val()
+			size:$size.val()
 		}
 	}
 	var pageHandler=function(p){
-		$('#page').html(p.page);
-		$('#len').html(p.record);
-		$('#last').html(p.totalpage);
+		$page.html(p.page);
+		$len.html(p.record);
+		$last.html(p.totalpage);
 		if(p.page>=p.totalpage){
-			$('#next').hide();
+			$next.hide();
 		}else{
-			$('#next').show();
+			$next.show();
 		}
 		if(p.page<=1){
-			$('#prev').hide();
+			$prev.hide();
 		}else{
-			$('#prev').show();
+			$prev.show();
 		}
 	
 	}
@@ -136,16 +177,21 @@ $(function () {
 		p.record=a.length;
 		p.totalpage=1+(p.record-1)/size|0;
 		pageHandler(p);
+		table=a;
 		a=a.slice((page-1)*size,page*size);
 		a.sort(function(v1,v2){
 			var d1=v1[3];
 			var d2=v2[3];
 			return new Date(d1)<new Date(d2); 
 		});
-		renderAction(a);
+		html=renderAction(a);
+		$actionlog.html(html);
 	}
-	var renderAction=function(a){
-		var bid,bNo,user,sex,name,roomId,html='<table><thead><th>房间</th><th>床位</th><th>姓名</th><th>性别</th><th>部门</th><th>职位</th><th>搬入搬出</th><th>日期</th><th>操作</th></thead><tbody>';
+	var renderAction=function(a,isExport){
+		var bid,bNo,user,sex,name,roomId,html;
+		html='<table><thead><th>房间</th><th>床位</th><th>姓名</th><th>性别</th><th>部门</th>'
+		+'<th>职位</th><th>搬入搬出</th><th>日期</th>'+(isExport?'':'<th>操作</th>')+'</thead><tbody>';
+
 		a.forEach(function(v){
 			roomId=v[0];
 			bid=roomId.slice(0,3);
@@ -165,14 +211,15 @@ $(function () {
 			var dept=user[2]||'';
 			var job=user[3]||'';
 			var date=v[3]||'';
-			html+='<tr class="data" id="'+v[4]+'"><td>'+bid+'</td><td>'+bNo+'</td><td>'+name+'</td><td>'+sex+'</td><td>'+dept+'</td><td>'+job+'</td><td>'+action+'</td><td>'+date+'</td><td>'+act+'</td></tr>';
+			html+='<tr class="data" id="'+v[4]+'"><td>'+bid+'</td><td>'+bNo+'</td><td>'+name+'</td><td>'+sex+'</td><td>'+dept+'</td><td>'+job+'</td>'
+			+'<td>'+action+'</td><td>'+date+'</td>'+(isExport?'':('<td>'+act+'</td>'))+'</tr>';
 		});
 		html+='</tbody></table>';
-		$('#actionlog').html(html);
+		return html;
 	}
 	//显示床位
 	var showBed=function(page){
-		var p,size,totalpage,bs=get('bs',true);
+		var html,p,size,totalpage,bs=get('bs',true);
 		p=getPage(page);
 		page=p.page;
 		size=p.size;
@@ -182,12 +229,14 @@ $(function () {
 		p.record=bs.length;
 		p.totalpage=1+(p.record-1)/size|0;
 		pageHandler(p);
+		table=bs;
 		bs=bs.slice((page-1)*size,page*size);
-		renderBed(bs);
+		html=renderBed(bs);
+		$list.html(html);
 	}
-	var renderBed=function(bs){
-		var roomId,info,user,uid,act,name,bid,bNo,
-		html='<table><thead><th>房间</th><th>床位</th><th>姓名</th><th>性别</th><th>部门</th><th>职位</th><th>搬入日期</th><th>操作</th></thead><tbody>';
+	var renderBed=function(bs,isExport){
+		var roomId,info,user,uid,act,name,bid,bNo,html;
+		html='<table><thead><th>房间</th><th>床位</th><th>姓名</th><th>性别</th><th>部门</th><th>职位</th><th>搬入日期</th>'+(!isExport?'<th>操作</th>':'')+'</thead><tbody>';
 		bs.forEach(function(v){
 			v=v.split(':');
 			roomId=v[0];
@@ -198,14 +247,14 @@ $(function () {
 			user=get('user')[uid]||{};
 			name=user[0];
 			if(name){
-			name= '<a href="#" class="name" id="'+uid+'" title="点击编辑人员信息">'+name+'</a>';
+				name=isExport?name: '<a href="#" class="name" id="'+uid+'" title="点击编辑人员信息">'+name+'</a>';
 			}else{
-			name='空';
+				name=isExport?'':'空';
 			}
 			if(uid>0){
-				act= '<a class="out" href="#" title="点击会弹出日期选择框选择搬出日期">搬出</a><input style="display:none" placeholder="请选择搬出日期" type="text" />';
+				act=isExport?'搬出':'<a class="out" href="#" title="点击会弹出日期选择框选择搬出日期">搬出</a><input style="display:none" placeholder="请选择搬出日期" type="text" />';
 			}else{
-				act= '<a class="del" href="#">删除床位</a>';
+				act=isExport?'':'<a class="del" href="#">删除床位</a>';
 			}
 			var sex=user[1]||'';
 			if(sex==1){
@@ -216,44 +265,38 @@ $(function () {
 			var dept=user[2]||'';
 			var job=user[3]||'';
 			var date=info[1]||'';
-			html+='<tr class="data" id="'+roomId+'"><td>'+bid+'</td><td>'+bNo+'</td><td>'+name+'</td><td>'+sex+'</td><td>'+dept+'</td><td>'+job+'</td><td>'+date+'</td><td>'+act+'</td></tr>';
+			html+='<tr class="data" id="'+roomId+'"><td>'+bid+'</td><td>'+bNo+'</td><td>'+name+'</td><td>'+sex+'</td><td>'+dept+'</td><td>'+job+'</td><td>'+date+'</td>'+(!isExport?'<td>'+act+'</td>':'')+'</tr>';
 		});
 		html+='</tbody></table>';
-		$('#list').html(html);
+		return html;
 	}
-	$('#prev').click(function(){
-		var $p=$('#page'),p=$p.html();
+	$prev.click(function(){
+		var $p=$page,p=$p.html();
 		p=p-1;
 		p=p>0?p:1;
 		show(p);
 		return false;
 	});
-	$('#next').click(function(){
-		var $p=$('#page'),p=$p.html();
-		p=+p+1;
-		show(p);
+	$next.click(function(){
+		var p=$page.html();
+		show(+p+1);
 		return false;
 	});
-	$('#first').click(function(){
+	$first.click(function(){
 		show(1);
 		return false;
 	});
-	$('#last').click(function(){
-		var p=$('#page');
-		p.html(+this.innerHTML);
-		show();
+	$last.click(function(){
+		show(+this.innerHTML);
 		return false;
 	});
 	$('.search').click(function(){
 		show(1);
 	});
-	$('#size').change(function(){
+	$size.change(function(){
 		show(1);
 	});
-	$('#reset').click(function(){
-		$('.date').val('');
-	});
-	$('#actionlog').on('click','.dellog',function(){
+	$actionlog.on('click','.dellog',function(){
 		var id,thisId,action=get('action');
 		thisId=$(this).parent().parent().attr('id');
 		for(var i=action.length;i--;){
@@ -290,7 +333,7 @@ $(function () {
 		}
 	});
 	editUser.tmpl=$.trim(editUser.html());
-	$('#list').on('click','.out',function(){
+	$list.on('click','.out',function(){
 		var $this=$(this);
 		var indate=$this.parent().prev().html();
 		var d=$this.next().datepicker({
@@ -320,9 +363,9 @@ $(function () {
 		var id=this.id;
 		var r=id.slice(0,3);
 		var b=id.slice(3);
-		$('#inform>#name').val('').focus();
-		$('#inform>.room').val(r);
-		$('#inform>.bed').val(b);
+		$inform.find('.name').val('').focus();
+		$inform.find('.room').val(r);
+		$inform.find('.bed').val(b);
 		return false;
 	}).on('click','.del',function(){
 		var $this=$(this);
@@ -361,13 +404,13 @@ $(function () {
 		$('.content').hide();
 		$('#'+this.id+'_content').show();
 		show={bed:showBed,action:showAction}[this.id];
+		render={bed:renderBed,action:renderAction}[this.id];
 		show(1);
 		return false;
 	});
 	//录入事件
-	var inform=$('#inform');
 	$('#in').click(function () {
-		var inout=getFormData(inform);
+		var inout=getFormData($inform);
 		if(!inout.name||!inout.date){
 			alert('姓名，日期不能为空',inout);
 		}else{
@@ -380,6 +423,16 @@ $(function () {
 			inlog(inout);
 		}
 		return false;
+	});
+	//导出excel
+	var exports=function(table){
+		table='<html><head></head><body><table>'+table+'</table></body></html>';
+		table=window.btoa(unescape(encodeURIComponent(table)));
+		window.location.href = 'data:application/vnd.ms-excel;base64,' + table;
+	}
+	$('#export').click(function(){
+		var html=render(table,true);
+		exports(html);
 	});
 	var init = function () {
 		var i, j, bid, bs, bedstatus = {};
@@ -421,7 +474,7 @@ $(function () {
 	}
 	generateSelect($('.room'), room);
 	generateSelect($('.bed'), [1,2,3,4,5]);
-	generateSelect($('#size'), [15,20,25,30,35,40,50]);
+	generateSelect($size, [15,20,25,30,35,40,50]);
 	$.datepicker.setDefaults({maxDate:0});
 	var from=$('.from').datepicker({ defaultDate:-7,onSelect:function(){
 		to.datepicker('option','minDate',this.value);
