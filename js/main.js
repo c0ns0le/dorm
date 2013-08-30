@@ -189,7 +189,7 @@ $(function () {
 	}
 	var renderAction=function(a,isExport){
 		var bid,bNo,user,sex,name,roomId,html;
-		html='<table><thead><th>房间</th><th>床位</th><th>姓名</th><th>性别</th><th>部门</th>'
+		html='<table class="table"><thead><th>房间</th><th>床位</th><th>姓名</th><th>性别</th><th>部门</th>'
 		+'<th>职位</th><th>搬入搬出</th><th>日期</th>'+(isExport?'':'<th>操作</th>')+'</thead><tbody>';
 
 		a.forEach(function(v){
@@ -236,7 +236,7 @@ $(function () {
 	}
 	var renderBed=function(bs,isExport){
 		var roomId,info,user,uid,act,name,bid,bNo,html;
-		html='<table><thead><th>房间</th><th>床位</th><th>姓名</th><th>性别</th><th>部门</th><th>职位</th><th>搬入日期</th>'+(!isExport?'<th>操作</th>':'')+'</thead><tbody>';
+		html='<table class="table"><thead><th>房间</th><th>床位</th><th>姓名</th><th>性别</th><th>部门</th><th>职位</th><th>搬入日期</th>'+(!isExport?'<th>操作</th>':'')+'</thead><tbody>';
 		bs.forEach(function(v){
 			v=v.split(':');
 			roomId=v[0];
@@ -252,7 +252,7 @@ $(function () {
 				name=isExport?'':'空';
 			}
 			if(uid>0){
-				act=isExport?'搬出':'<a class="out" href="#" title="点击会弹出日期选择框选择搬出日期">搬出</a><input style="display:none" placeholder="请选择搬出日期" type="text" />';
+				act=isExport?'搬出':'<a class="out" href="#" title="点击会弹出日期选择框选择搬出日期">搬出</a><input style="display:none" placeholder="搬出日期" type="text" />';
 			}else{
 				act=isExport?'':'<a class="del" href="#">删除床位</a>';
 			}
@@ -292,6 +292,7 @@ $(function () {
 	});
 	$('.search').click(function(){
 		show(1);
+		return false;
 	});
 	$size.change(function(){
 		show(1);
@@ -433,6 +434,7 @@ $(function () {
 	$('#export').click(function(){
 		var html=render(table,true);
 		exports(html);
+		return false;
 	});
 	var init = function () {
 		var i, j, bid, bs, bedstatus = {};
